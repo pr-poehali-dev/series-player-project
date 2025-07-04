@@ -15,6 +15,7 @@ const Index = () => {
         id: i + 1,
         title: `Серия ${i + 1}`,
         duration: "45 мин",
+        videoUrl: `https://vk.com/video_ext.php?oid=-123456789&id=45678901${i + 1}&hash=abcdef123456&hd=1`,
       })),
     },
     {
@@ -24,6 +25,7 @@ const Index = () => {
         id: i + 1,
         title: `Серия ${i + 1}`,
         duration: "47 мин",
+        videoUrl: `https://vk.com/video_ext.php?oid=-123456789&id=45678902${i + 1}&hash=abcdef123456&hd=1`,
       })),
     },
     {
@@ -33,6 +35,7 @@ const Index = () => {
         id: i + 1,
         title: `Серия ${i + 1}`,
         duration: "44 мин",
+        videoUrl: `https://vk.com/video_ext.php?oid=-123456789&id=45678903${i + 1}&hash=abcdef123456&hd=1`,
       })),
     },
   ];
@@ -54,15 +57,29 @@ const Index = () => {
           <div className="flex-1 flex flex-col">
             <Card className="bg-[#2D2D2D] border-none mb-4 overflow-hidden">
               <div className="aspect-video bg-black relative group">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-20 h-20 bg-[#3B82F6] rounded-full flex items-center justify-center mb-4 mx-auto opacity-80">
-                      <Icon name="Play" size={32} className="text-white ml-1" />
+                {currentEpisodeData?.videoUrl ? (
+                  <iframe
+                    src={currentEpisodeData.videoUrl}
+                    width="100%"
+                    height="100%"
+                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                    allowFullScreen
+                    className="absolute inset-0"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-20 h-20 bg-[#3B82F6] rounded-full flex items-center justify-center mb-4 mx-auto opacity-80">
+                        <Icon
+                          name="Play"
+                          size={32}
+                          className="text-white ml-1"
+                        />
+                      </div>
+                      <p className="text-gray-300 text-sm">Видео плеер</p>
                     </div>
-                    <p className="text-gray-300 text-sm">Видео плеер</p>
                   </div>
-                </div>
+                )}
 
                 {/* Video Controls */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
@@ -127,50 +144,62 @@ const Index = () => {
 
           {/* Episodes Panel - Right Side */}
           <div className="w-[200px] flex flex-col">
-            {/* Season Selector */}
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold mb-3">Сезоны</h3>
-              <div className="flex flex-col gap-2">
-                {seasons.map((season) => (
-                  <Button
-                    key={season.id}
-                    variant={
-                      currentSeason === season.id ? "default" : "outline"
-                    }
-                    className={`w-full text-left justify-start ${
-                      currentSeason === season.id
-                        ? "bg-[#3B82F6] text-white"
-                        : "bg-[#2D2D2D] text-gray-300 border-gray-600 hover:bg-gray-600"
-                    }`}
-                    onClick={() => setCurrentSeason(season.id)}
-                  >
-                    {season.name}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Episodes Grid */}
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-3">Серии</h3>
-              <div className="grid grid-cols-5 gap-[5px]">
-                {currentSeasonData?.episodes.map((episode) => (
-                  <button
-                    key={episode.id}
-                    onClick={() => handleEpisodeSelect(episode.id)}
-                    className={`
-                      aspect-square rounded-[5px] text-sm font-medium transition-all duration-200
-                      ${
-                        currentEpisode === episode.id
-                          ? "bg-[#3B82F6] text-white shadow-[0_0_0_2px_#3B82F6]"
-                          : "bg-[#2D2D2D] text-gray-300 hover:bg-gray-600"
-                      }
-                    `}
-                  >
-                    {episode.id}
-                  </button>
-                ))}
-              </div>
+            <div className="flex-1 space-y-6">
+              {seasons.map((season) => (
+                <div key={season.id} className="space-y-2">
+                  <h3 className="text-lg font-semibold">{season.name}</h3>
+                  <div className="grid grid-cols-5 gap-[5px]">
+                    {season.episodes.map((episode) => (
+                      <button
+                        key={`${season.id}-${episode.id}`}
+                        onClick={() => {
+                          setCurrentSeason(season.id);
+                          handleEpisodeSelect(episode.id);
+                        }}
+                        className={`
+                          aspect-square rounded-[5px] text-sm font-medium transition-all duration-200 relative
+                          ${
+                            currentSeason === season.id &&
+                            currentEpisode === episode.id
+                              ? "bg-[#3B82F6] text-white"
+                              : "bg-[#2D2D2D] text-gray-300 hover:bg-[#2D2D2D]"
+                          }
+                        `}
+                        style={{
+                          boxShadow:
+                            currentSeason === season.id &&
+                            currentEpisode === episode.id
+                              ? "0 0 0 2px #3B82F6"
+                              : "none",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (
+                            !(
+                              currentSeason === season.id &&
+                              currentEpisode === episode.id
+                            )
+                          ) {
+                            e.currentTarget.style.boxShadow =
+                              "0 0 0 2px #6B7280";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (
+                            !(
+                              currentSeason === season.id &&
+                              currentEpisode === episode.id
+                            )
+                          ) {
+                            e.currentTarget.style.boxShadow = "none";
+                          }
+                        }}
+                      >
+                        {episode.id}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
